@@ -10,9 +10,16 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    const zig_toml = b.dependency("zig_toml", .{
+        .target = target,
+        .optimize = optimize,
+    });
+
+    lib_mod.addImport("toml", zig_toml.module("toml"));
+
     const lib = b.addLibrary(.{
         .linkage = .static,
-        .name = "rubik_store",
+        .name = "rubik-store",
         .root_module = lib_mod,
     });
 

@@ -5,20 +5,24 @@ const iface = @import("interface.zig");
 
 const file_path = "config/prod.toml";
 
+/// TOMLConfigManager is an implementation for the ConfigManager interface.
 pub const TOMLConfigManager = struct {
     allocator: std.mem.Allocator,
     config: types.DBConfig,
 
-    pub fn init(allocator: std.mem.Allocator, path: []const u8) !TOMLConfigManager {
+    /// init initializes the configuration manager.
+    /// It loads the configuration from the provided file path.
+    pub fn init(allocator: std.mem.Allocator) !TOMLConfigManager {
         var self = TOMLConfigManager{
             .allocator = allocator,
             .config = types.DBConfig.init(),
         };
 
-        try self.loadFromFile(path);
+        try self.loadFromFile(file_path);
         return self;
     }
 
+    /// configManager returns the interface type - ConfigManager with implementation of TOMLConfigManager.
     pub fn configManager(self: *TOMLConfigManager) iface.ConfigManager {
         return .{
             .ctx = self,
@@ -26,6 +30,7 @@ pub const TOMLConfigManager = struct {
         };
     }
 
+    /// getConfig is the implementation of the interface method required by the ConfigManager.
     fn getConfig(ptr: *anyopaque, category: types.ConfigCategory, key: anytype) ?types.ConfigValue {
         const self: *TOMLConfigManager = @ptrCast(@alignCast(ptr));
 
@@ -34,6 +39,7 @@ pub const TOMLConfigManager = struct {
         };
     }
 
+    /// getFromMap is a utility method for fetching a config value from a given config map.
     fn getFromMap(
         comptime KeyEnum: type,
         map: std.EnumMap(KeyEnum, types.ConfigValue),
@@ -45,6 +51,7 @@ pub const TOMLConfigManager = struct {
         return map.get(key);
     }
 
+    /// loadFromFile reads the TOML configuration from the file and loads it in internal maps for vending.
     fn loadFromFile(self: *TOMLConfigManager, path: []const u8) !void {
         const data = try std.fs.cwd().readFileAlloc(
             self.allocator,
@@ -63,6 +70,7 @@ pub const TOMLConfigManager = struct {
         }
     }
 
+    /// parseStorage loads the configuration for category - storage.
     fn parseStorage(self: *TOMLConfigManager, v: toml.Value) void {
         if (v.get("page_size")) |ps| {
             self.config.storage.map.put(
