@@ -10,12 +10,11 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    const zig_toml = b.dependency("zig_toml", .{
+    const toml = b.dependency("toml", .{
         .target = target,
         .optimize = optimize,
     });
-
-    lib_mod.addImport("toml", zig_toml.module("toml"));
+    lib_mod.addImport("toml", toml.module("toml"));
 
     const lib = b.addLibrary(.{
         .linkage = .static,
@@ -25,14 +24,8 @@ pub fn build(b: *std.Build) void {
 
     b.installArtifact(lib);
 
-    const test_mod = b.createModule(.{
-        .root_source_file = b.path("src/tests.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
     const lib_unit_tests = b.addTest(.{
-        .root_module = test_mod,
+        .root_module = lib_mod,
     });
 
     const run_lib_unit_tests = b.addRunArtifact(lib_unit_tests);

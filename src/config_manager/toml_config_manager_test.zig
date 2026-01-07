@@ -1,7 +1,7 @@
 const std = @import("std");
 const testing = std.testing;
 
-const TOMLConfigManager = @import("toml_config_manager.zig");
+const TOMLConfigManager = @import("toml_config_manager.zig").TOMLConfigManager;
 const types = @import("types.zig");
 
 test "storage config loads correctly" {
@@ -20,8 +20,4 @@ test "storage config loads correctly" {
     };
 
     try testing.expectEqual(@as(i64, 4096), val.integer);
-}
-
-test "example print" {
-    std.debug.print("Hello from the test!\n", .{});
 }

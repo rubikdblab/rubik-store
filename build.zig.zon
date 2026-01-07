@@ -65,9 +65,9 @@
         //    // actually used.
         //    .lazy = false,
         //},
-        .zig_toml = .{
-            .url = "git+https://github.com/sam701/zig-toml#7e94b0a6fa1c846779304a1b8d7493091d793095",
-            .hash = "toml-0.3.0-bV14BVyFAQDTlzyP2Tw_GGoF7Q3QqP94nLAvB1djeE8S",
+        .toml = .{
+            .url = "https://github.com/sam701/zig-toml#cf50bd59c6276fb2b6d34b8d71d35486eecc719c",
+            .hash = "toml-0.3.0-bV14Bd-EAQBKoXhpYft303BtA2vgLNlxntUCIWgRUl46",
         },
     },
 
