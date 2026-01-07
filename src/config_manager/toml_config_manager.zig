@@ -3,8 +3,6 @@ const std = @import("std");
 const types = @import("types.zig");
 const iface = @import("interface.zig");
 
-const file_path = "config/prod.toml";
-
 /// TOMLConfigManager is an implementation for the ConfigManager interface.
 pub const TOMLConfigManager = struct {
     allocator: std.mem.Allocator,
@@ -12,13 +10,13 @@ pub const TOMLConfigManager = struct {
 
     /// init initializes the configuration manager.
     /// It loads the configuration from the provided file path.
-    pub fn init(allocator: std.mem.Allocator) !TOMLConfigManager {
+    pub fn init(allocator: std.mem.Allocator, path: []const u8) !TOMLConfigManager {
         var self = TOMLConfigManager{
             .allocator = allocator,
             .config = types.DBConfig.init(),
         };
 
-        try self.loadFromFile(file_path);
+        try self.loadFromFile(path);
         return self;
     }
 
