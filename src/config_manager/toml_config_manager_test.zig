@@ -1,23 +1,19 @@
 const std = @import("std");
-const testing = std.testing;
-
-const TOMLConfigManager = @import("toml_config_manager.zig").TOMLConfigManager;
 const types = @import("types.zig");
+const ConfigManager = @import("interface.zig").ConfigManager;
+const testing = std.testing;
+const TOMLConfigManager = @import("toml_config_manager.zig").TOMLConfigManager;
 
 test "storage config loads correctly" {
-    var mgr = try TOMLConfigManager.init(
+    const tomlConfigManager = try TOMLConfigManager.init(
         testing.allocator,
         "test_data/config/test.toml",
     );
-
-    const configManager = mgr.configManager();
-    const val = configManager.getConfig(
-        types.ConfigCategory.storage,
-        types.StorageConfigKey.page_size,
-    ) orelse {
-        try testing.expect(false);
-        return;
+    const cfgMgr = ConfigManager{
+        .ctx = tomlConfigManager,
     };
 
-    try testing.expectEqual(@as(i64, 4096), val.integer);
+    const storageCfg = cfgMgr.getConfig(types.StorageConfig);
+
+    try testing.expectEqual(@as(i64, 4096), storageCfg.page_size);
 }

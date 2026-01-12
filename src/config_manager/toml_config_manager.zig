@@ -6,6 +6,7 @@ const iface = @import("interface.zig");
 /// TOMLConfigManager is an implementation for the ConfigManager interface.
 pub const TOMLConfigManager = struct {
     allocator: std.mem.Allocator,
+    path: []const u8,
     config: types.DBConfig,
 
     /// init initializes the configuration manager.
@@ -13,10 +14,11 @@ pub const TOMLConfigManager = struct {
     pub fn init(allocator: std.mem.Allocator, path: []const u8) !TOMLConfigManager {
         var self = TOMLConfigManager{
             .allocator = allocator,
-            .config = types.DBConfig.init(),
+            .path = path,
+            .config = std.mem.zeroes(types.DBConfig),
         };
 
-        try self.loadFromFile(path);
+        try self.loadFromFile();
         return self;
     }
 
@@ -29,52 +31,22 @@ pub const TOMLConfigManager = struct {
     }
 
     /// getConfig is the implementation of the interface method required by the ConfigManager.
-    fn getConfig(ptr: *anyopaque, category: types.ConfigCategory, key: anytype) ?types.ConfigValue {
-        const self: *TOMLConfigManager = @ptrCast(@alignCast(ptr));
-
-        return switch (category) {
-            .storage => getFromMap(types.StorageConfigKey, self.config.storage.map, key),
-        };
-    }
-
-    /// getFromMap is a utility method for fetching a config value from a given config map.
-    fn getFromMap(
-        comptime KeyEnum: type,
-        map: std.EnumMap(KeyEnum, types.ConfigValue),
-        key: anytype,
-    ) ?types.ConfigValue {
-        if (@TypeOf(key) != KeyEnum) {
-            @panic("Invalid config key type for category");
+    fn getConfig(self: *TOMLConfigManager, comptime ConfigType: type) !ConfigType {
+        if (ConfigType == types.StorageConfig) {
+            return self.db_config.storageConfig;
+        } else {
+            @compileError("Unknown config type requested");
         }
-        return map.get(key);
     }
 
     /// loadFromFile reads the TOML configuration from the file and loads it in internal maps for vending.
-    fn loadFromFile(self: *TOMLConfigManager, path: []const u8) !void {
-        const data = try std.fs.cwd().readFileAlloc(
-            self.allocator,
-            path,
-            64 * 1024,
-        );
-        defer self.allocator.free(data);
-
-        var parser = toml.Parser.init(self.allocator);
+    fn loadFromFile(self: *TOMLConfigManager) !void {
+        var parser = toml.Parser(types.DBConfig).init(self.allocator);
         defer parser.deinit();
 
-        const root = try parser.parse(data);
+        var result = try parser.parseFile(self.path);
+        defer result.deinit();
 
-        if (root.get("storage")) |s| {
-            self.parseStorage(s);
-        }
-    }
-
-    /// parseStorage loads the configuration for category - storage.
-    fn parseStorage(self: *TOMLConfigManager, v: toml.Value) void {
-        if (v.get("page_size")) |ps| {
-            self.config.storage.map.put(
-                .page_size,
-                .{ .integer = ps.integer },
-            );
-        }
+        self.db_config = result.value;
     }
 };
